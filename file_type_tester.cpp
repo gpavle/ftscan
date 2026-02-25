@@ -9,6 +9,7 @@ using std::endl;
 using std::string;
 using std::filesystem::directory_iterator;
 using std::filesystem::path;
+using std::filesystem::is_directory;
 using std::ifstream;
 using std::error_code;
 using std::vector;
@@ -21,20 +22,22 @@ enum FileType{
 };
 
 
-bool verbose {false};
-bool recursive{false};
+bool recursive {false};
+bool verbose{false};
 
 void check_type(const path &directory_name, const FileType &filetype){
 
     error_code ec;
 
     for(const auto &file : directory_iterator(directory_name, ec)){
+        if(recursive && is_directory(file.path()))
+            check_type(file.path(), filetype);
         ifstream ifile{file.path().string(), std::ios::binary};
         if(ifile.is_open()){
             long long magic_number {0};
             ifile.read(reinterpret_cast<char*>(&magic_number), 8);
 
-            if(magic_number == filetype){
+             if(magic_number == filetype){
                 cout<<file.path().string()<<endl;
             }
 
@@ -42,11 +45,11 @@ void check_type(const path &directory_name, const FileType &filetype){
                 
         }
         else if(verbose){
-            cout<<"Failed to open file: "<<file.path().filename().generic_string();
+            cout<<"Failed to open file: "<<file.path().filename().generic_string()<<endl;
         }
 
     }
-     if(ec){
+     if(ec && verbose){
             cout<<ec.message()<<endl;
             return;
         }
@@ -55,7 +58,7 @@ void check_type(const path &directory_name, const FileType &filetype){
 void print_help(){
 
     cout<<endl;
-    cout<<"Usage: file_type_tester [directory path] [file type] (-v)"<<endl;
+    cout<<"Usage: file_type_tester (-r/n) [file type] [directory path]  (-v/n)"<<endl;
     cout<<"Currently supported file types: "<<endl;
     cout<<"Elf(use -e in file type)"<<endl;
 
@@ -85,6 +88,7 @@ void check_args(const vector<string> &args){
     else{
         cout<<"Invalid number of arguments";
     }
+
 }
 
 
