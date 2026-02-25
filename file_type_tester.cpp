@@ -60,7 +60,7 @@ void check_type(const path &directory_name, const FileType &filetype){
 void print_help(){
 
     cout<<endl;
-    cout<<"Usage: file_type_tester (-r/n) [file type] [directory path]  (-v/n)"<<endl;
+    cout<<"Usage: file_type_tester [file type] [directory path] (-r) (-v)"<<endl;
     cout<<"Currently supported file types: "<<endl;
     cout<<"Elf(use -e in file type)"<<endl;
 
@@ -73,22 +73,43 @@ void check_args(const vector<string> &args){
         return;
     }
 
-     if(args.size() == 5){
-        if(args.at(4) == "-v")
-            verbose = true;
-        if(args.at(1) == "-r")
+    if(args.size() < 3)
+        cout<<"Too little arguments provided, use -h for help"<<endl;
+
+    if(args.size() == 5){
+        if(args.at(3) == "-r")
             recursive = true;
+        else{
+            cout<<"Invalid argument provided, use -h for help"<<endl;
+            return;}
+
+        if(args.at(4) == "-v")
+            verbose = true;}
+
+    if(args.size() == 4){
+        if(args.at(3) == "-r")
+            recursive = true;
+        else if(args.at(3) == "-v")
+            verbose = true;
+        else{
+            cout<<"Invalid argument provided, use -h for help";
+        }
+    }
+     
+
         
-        if(args.at(2) == "-e")
-            check_type(args.at(3), FileType::ELF);
+    
+    if(args.size() >= 3 && args.size() <= 5){
+        if(args.at(1) == "-e")
+            check_type(args.at(2), FileType::ELF);
         
-        else if(args.at(2) == "-p")
-            check_type(args.at(3), FileType::PNG);
+        else if(args.at(1) == "-p")
+            check_type(args.at(2), FileType::PNG);}
         
 
-    }
+    
     else{
-        cout<<"Invalid number of arguments";
+        cout<<"Too little arguments provided, use -h for help"<<endl;
     }
 
 }
