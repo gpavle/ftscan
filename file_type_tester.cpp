@@ -28,8 +28,10 @@ bool verbose{false};
 void check_type(const path &directory_name, const FileType &filetype){
 
     error_code ec;
+    static string error_dir;
 
     for(const auto &file : directory_iterator(directory_name, ec)){
+        error_dir = file.path().string();
         if(recursive && is_directory(file.path()))
             check_type(file.path(), filetype);
         ifstream ifile{file.path().string(), std::ios::binary};
@@ -44,14 +46,14 @@ void check_type(const path &directory_name, const FileType &filetype){
             ifile.close();
                 
         }
-        else if(verbose){
-            cout<<"Failed to open file: "<<file.path().filename().generic_string()<<endl;
+        else if(verbose && !is_directory(file.path())){
+            cout<<"Failed to open file: "<<file.path().generic_string()<<endl;
         }
 
     }
      if(ec && verbose){
-            cout<<ec.message()<<endl;
-            return;
+            cout<<"Failed to open directory:"<<error_dir<<" "<<ec.message()<<endl;
+            
         }
 }
 
