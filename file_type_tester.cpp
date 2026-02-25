@@ -28,7 +28,7 @@ bool verbose{false};
 void check_type(const path &directory_name, const FileType &filetype){
 
     error_code ec;
-    static string error_dir;
+    static string error_dir{directory_name};
 
     for(const auto &file : directory_iterator(directory_name, ec)){
         error_dir = file.path().string();
