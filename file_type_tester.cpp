@@ -22,6 +22,7 @@ enum FileType{
 
 
 bool verbose {false};
+bool recursive{false};
 
 void check_type(const path &directory_name, const FileType &filetype){
 
@@ -62,45 +63,28 @@ void print_help(){
 
 void check_args(const vector<string> &args){
 
-    if(args.size() == 4){
-        if(args.at(3) == "-v"){
+    if(args.size() == 2 && args.at(1) == "-h"){
+        print_help();
+        return;
+    }
+
+     if(args.size() == 5){
+        if(args.at(4) == "-v")
             verbose = true;
-        }
-        else{
-            cout<<"Invalid argument";
-            return;
-        }}
-    
-
-    if(args.size() == 1){
-        cout<<"Too little arguments, type file_type_tester -h for help";
-    }
-
-
-    else if(args.size() == 2){
-        if(args.at(1) == "-h")
-            print_help();
-        else{
-            cout<<"Invalid argument";
-            return;
-        }
-    }
-
-    else if(args.size() == 3 || args.size() == 4){
-        if(args.at(1) == "-e")
-            check_type(args.at(2), FileType::ELF);
-        else if(args.at(1) == "-p")
-            check_type(args.at(2), FileType::PNG);
-
-        else{
-            cout<<"Invalid argument";
-        }
+        if(args.at(1) == "-r")
+            recursive = true;
         
+        if(args.at(2) == "-e")
+            check_type(args.at(3), FileType::ELF);
+        
+        else if(args.at(2) == "-p")
+            check_type(args.at(3), FileType::PNG);
+        
+
     }
     else{
-        cout<<"Too many arguments, use -h for help";
+        cout<<"Invalid number of arguments";
     }
-
 }
 
 
