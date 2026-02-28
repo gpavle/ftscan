@@ -115,6 +115,10 @@ void check_args(const vector<string> &args){
         else if(args.at(1) == "-p")
             check_type(args.at(2), FileType::PNG, scan_options);
 
+        else{
+            cout<<"Invalid argument provided, use -h for help";
+        }
+
             
         
         }
