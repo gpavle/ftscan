@@ -14,6 +14,14 @@ using std::ifstream;
 using std::error_code;
 using std::vector;
 
+struct ScanOptions{
+
+    bool recursive;
+    bool verbose;
+
+
+};
+
 enum FileType{
 
     ELF = 282584257676671,
@@ -22,18 +30,17 @@ enum FileType{
 };
 
 
-bool recursive {false};
-bool verbose{false};
 
-void check_type(const path &directory_name, const FileType &filetype){
+
+void check_type(const path &directory_name, const FileType &filetype, const ScanOptions &scan_options){
 
     error_code ec;
     static string error_dir{directory_name};
 
     for(const auto &file : directory_iterator(directory_name, ec)){
         error_dir = file.path().string();
-        if(recursive && is_directory(file.path()))
-            check_type(file.path(), filetype);
+        if(scan_options.recursive && is_directory(file.path()))
+            check_type(file.path(), filetype, scan_options);
         ifstream ifile{file.path().string(), std::ios::binary};
         if(ifile.is_open()){
             long long magic_number {0};
@@ -46,12 +53,12 @@ void check_type(const path &directory_name, const FileType &filetype){
             ifile.close();
                 
         }
-        else if(verbose && !is_directory(file.path())){
+        else if(scan_options.verbose && !is_directory(file.path())){
             cout<<"Failed to open file: "<<file.path().generic_string()<<endl;
         }
 
     }
-     if(ec && verbose){
+     if(ec && scan_options.verbose){
             cout<<"Failed to open directory:"<<error_dir<<" "<<ec.message()<<endl;
             
         }
@@ -68,6 +75,8 @@ void print_help(){
 
 void check_args(const vector<string> &args){
 
+    ScanOptions scan_options;
+
     if(args.size() == 2 && args.at(1) == "-h"){
         print_help();
         return;
@@ -78,19 +87,19 @@ void check_args(const vector<string> &args){
 
     if(args.size() == 5){
         if(args.at(3) == "-r")
-            recursive = true;
+            scan_options.recursive = true;
         else{
             cout<<"Invalid argument provided, use -h for help"<<endl;
             return;}
 
         if(args.at(4) == "-v")
-            verbose = true;}
+            scan_options.verbose = true;}
 
     if(args.size() == 4){
         if(args.at(3) == "-r")
-            recursive = true;
+            scan_options.recursive = true;
         else if(args.at(3) == "-v")
-            verbose = true;
+            scan_options.verbose = true;
         else{
             cout<<"Invalid argument provided, use -h for help";
         }
@@ -101,10 +110,14 @@ void check_args(const vector<string> &args){
     
     if(args.size() >= 3 && args.size() <= 5){
         if(args.at(1) == "-e")
-            check_type(args.at(2), FileType::ELF);
+            check_type(args.at(2), FileType::ELF, scan_options);
         
         else if(args.at(1) == "-p")
-            check_type(args.at(2), FileType::PNG);}
+            check_type(args.at(2), FileType::PNG, scan_options);
+
+            
+        
+        }
         
 
     
