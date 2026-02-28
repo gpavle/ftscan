@@ -14,6 +14,9 @@ using std::ifstream;
 using std::error_code;
 using std::vector;
 
+
+
+
 struct ScanOptions{
 
     bool recursive;
@@ -24,15 +27,30 @@ struct ScanOptions{
 
 enum FileType{
 
-    ELF = 282584257676671,
+    ELF = 1179403647,
     PNG = 727905341920923785
+
+};
+
+struct FileInfo{
+
+    FileType filetype;
+    size_t signature_length;
+
+    FileInfo(const FileType &input_filetype){
+        filetype = input_filetype;
+        if(filetype == ELF)
+            signature_length = 4;
+
+    }
 
 };
 
 
 
 
-void check_type(const path &directory_name, const FileType &filetype, const ScanOptions &scan_options){
+void check_type(const path &directory_name, const FileInfo &fileinfo, const ScanOptions &scan_options){
+
 
     error_code ec;
     static string error_dir{directory_name};
@@ -40,13 +58,13 @@ void check_type(const path &directory_name, const FileType &filetype, const Scan
     for(const auto &file : directory_iterator(directory_name, ec)){
         error_dir = file.path().string();
         if(scan_options.recursive && is_directory(file.path()))
-            check_type(file.path(), filetype, scan_options);
+            check_type(file.path(), fileinfo, scan_options);
         ifstream ifile{file.path().string(), std::ios::binary};
         if(ifile.is_open()){
             long long magic_number {0};
-            ifile.read(reinterpret_cast<char*>(&magic_number), 8);
+            ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
-             if(magic_number == filetype){
+             if(magic_number == fileinfo.filetype){
                 cout<<file.path().string()<<endl;
             }
 
