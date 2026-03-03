@@ -13,6 +13,7 @@ using std::filesystem::is_directory;
 using std::filesystem::is_regular_file;
 using std::filesystem::is_symlink;
 using std::filesystem::read_symlink;
+using std::filesystem::symlink_status;
 using std::ifstream;
 using std::filesystem::filesystem_error;
 using std::vector;
@@ -22,8 +23,9 @@ using std::vector;
 
 struct ScanOptions{
 
-    bool recursive;
-    bool verbose;
+    bool recursive = false;
+    bool verbose = false;
+    bool follow_symlinks = false;
 
 
 };
@@ -49,14 +51,15 @@ struct FileInfo{
 
 };
 
-bool is_valid_file(const string &file_path){
+bool is_valid_file(const path &file_path, const bool &follow_symlinks){
 
-    if(is_symlink(file_path))
-        return is_valid_file(read_symlink(file_path));
+    if(is_symlink(file_path) && follow_symlinks)
+        return is_valid_file(read_symlink(file_path), follow_symlinks);
     
     
 
-    else if(is_regular_file(file_path) || is_directory(file_path))   
+        
+    else if(is_regular_file(symlink_status(file_path)) || is_directory(symlink_status(file_path)))  
         return true;
 
     return false;
@@ -76,7 +79,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
 
     for(const auto &file : it){
         try{
-            if(!is_valid_file(file.path().string()))
+            if(!is_valid_file(file.path().string(), scan_options.follow_symlinks))
                 continue;
                 
             if(scan_options.recursive && is_directory(file.path()))
@@ -134,10 +137,12 @@ void check_args(const vector<string> &args){
             scan_options.recursive = true;
         if(arg == "-v")
             scan_options.verbose = true;
+        if(arg == "-l")
+            scan_options.follow_symlinks = true;
     }
      
 
-    if(args.size() <= 5){
+    if(args.size() <= 6){
         if(args.at(1) == "-e")
             check_type(args.at(2), FileType::ELF, scan_options);
         
@@ -151,8 +156,6 @@ void check_args(const vector<string> &args){
             
         
         }
-        
-
     
     else{
         cout<<"Too many arguments provided, use -h for help"<<endl;
