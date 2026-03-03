@@ -11,7 +11,7 @@ using std::filesystem::directory_iterator;
 using std::filesystem::path;
 using std::filesystem::is_directory;
 using std::ifstream;
-using std::error_code;
+using std::filesystem::filesystem_error;
 using std::vector;
 
 
@@ -52,11 +52,13 @@ struct FileInfo{
 void check_type(const path &directory_name, const FileInfo &fileinfo, const ScanOptions &scan_options){
 
 
-    error_code ec;
-    static string error_dir{directory_name};
+    try{
+        directory_iterator it(directory_name);
+    
+    
 
-    for(const auto &file : directory_iterator(directory_name, ec)){
-        error_dir = file.path().string();
+    for(const auto &file : it){
+        try{
         if(scan_options.recursive && is_directory(file.path()))
             check_type(file.path(), fileinfo, scan_options);
         ifstream ifile{file.path().string(), std::ios::binary};
@@ -73,13 +75,16 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
         }
         else if(scan_options.verbose && !is_directory(file.path())){
             cout<<"Failed to open file: "<<file.path().generic_string()<<endl;
-        }
+        }}
 
-    }
-     if(ec && scan_options.verbose){
-            cout<<"Failed to open directory:"<<error_dir<<" "<<ec.message()<<endl;
-            
-        }
+    catch(const filesystem_error &fse){
+        if(scan_options.verbose)
+            cout<<fse.what()<<endl;
+    }}
+}catch(const filesystem_error &fse){
+    if(scan_options.verbose)
+        cout<<fse.what()<<endl;
+}
 }
 
 void print_help(){
