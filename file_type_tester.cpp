@@ -125,33 +125,19 @@ void check_args(const vector<string> &args){
         return;
     }
 
-    if(args.size() < 3)
+    if(args.size() < 3){
         cout<<"Too little arguments provided, use -h for help"<<endl;
+        return;}
 
-    if(args.size() == 5){
-        if(args.at(3) == "-r")
+    for(const auto &arg : args){
+        if(arg == "-r")
             scan_options.recursive = true;
-        else{
-            cout<<"Invalid argument provided, use -h for help"<<endl;
-            return;}
-
-        if(args.at(4) == "-v")
-            scan_options.verbose = true;}
-
-    if(args.size() == 4){
-        if(args.at(3) == "-r")
-            scan_options.recursive = true;
-        else if(args.at(3) == "-v")
+        if(arg == "-v")
             scan_options.verbose = true;
-        else{
-            cout<<"Invalid argument provided, use -h for help";
-        }
     }
      
 
-        
-    
-    if(args.size() >= 3 && args.size() <= 5){
+    if(args.size() <= 5){
         if(args.at(1) == "-e")
             check_type(args.at(2), FileType::ELF, scan_options);
         
@@ -169,7 +155,7 @@ void check_args(const vector<string> &args){
 
     
     else{
-        cout<<"Too little arguments provided, use -h for help"<<endl;
+        cout<<"Too many arguments provided, use -h for help"<<endl;
     }
 
 }
