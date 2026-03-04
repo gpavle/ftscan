@@ -118,9 +118,14 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
 void print_help(){
 
     cout<<endl;
-    cout<<"Usage: file_type_tester [file type] [directory path] (-r) (-v)"<<endl;
+    cout<<"Usage: file_type_tester [file type] [directory path] [options]"<<endl;
+    cout<<"-v       verbose mode(displays error messages)"<<endl;
+    cout<<"-r       recurive mode(descends into subdirectories)"<<endl;
+    cout<<"-l       follow symlinks"<<endl;
+    cout<<"-a       always display absolute paths(will resolve symlinks)"<<endl;
     cout<<"Currently supported file types: "<<endl;
-    cout<<"Elf(use -e in file type)"<<endl;
+    cout<<"ELF(use -e in file type)"<<endl;
+    cout<<"PNG(use -p in the file type)"<<endl;
 
 }
 
