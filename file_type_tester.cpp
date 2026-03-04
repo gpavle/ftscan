@@ -9,6 +9,7 @@ using std::endl;
 using std::string;
 using std::filesystem::directory_iterator;
 using std::filesystem::path;
+using std::filesystem::canonical;
 using std::filesystem::is_directory;
 using std::filesystem::is_regular_file;
 using std::filesystem::is_symlink;
@@ -26,6 +27,7 @@ struct ScanOptions{
     bool recursive = false;
     bool verbose = false;
     bool follow_symlinks = false;
+    bool absolute_paths = false;
 
 
 };
@@ -90,7 +92,10 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
                 ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
             if(magic_number == fileinfo.filetype){
-                cout<<file.path().string()<<endl;
+                if(scan_options.absolute_paths)
+                    cout<<canonical(file.path()).string()<<endl;
+                else
+                    cout<<file.path().string()<<endl;
             }
 
             ifile.close();
@@ -139,10 +144,12 @@ void check_args(const vector<string> &args){
             scan_options.verbose = true;
         if(arg == "-l")
             scan_options.follow_symlinks = true;
+        if(arg == "-a")
+            scan_options.absolute_paths = true;
     }
      
 
-    if(args.size() <= 6){
+    if(args.size() <= 7){
         if(args.at(1) == "-e")
             check_type(args.at(2), FileType::ELF, scan_options);
         
