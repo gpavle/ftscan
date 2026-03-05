@@ -142,15 +142,44 @@ void check_args(const vector<string> &args){
         cout<<"Too little arguments provided, use -h for help"<<endl;
         return;}
 
-    for(const auto &arg : args){
-        if(arg == "-r")
-            scan_options.recursive = true;
-        if(arg == "-v")
-            scan_options.verbose = true;
-        if(arg == "-l")
-            scan_options.follow_symlinks = true;
-        if(arg == "-a")
-            scan_options.absolute_paths = true;
+    for(int i{0}; const auto &arg : args){
+
+        if(i >= 3){
+            if(arg == "-r"){
+                if(scan_options.recursive == true){
+                    cout<<"Invalid argument provieded, use -h for help"<<endl;
+                    return;
+                }
+                scan_options.recursive = true;
+            }
+            if(arg == "-v"){
+                if(scan_options.verbose == true){
+                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    return;
+                }
+                scan_options.verbose = true;
+            }
+            if(arg == "-l"){
+                if(scan_options.follow_symlinks == true){
+                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    return;
+                }
+                scan_options.follow_symlinks = true;
+            }
+            if(arg == "-a"){
+                if(scan_options.absolute_paths == true){
+                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    return;
+                }
+                scan_options.absolute_paths = true;
+            }
+            
+            if(arg != "-r" && arg != "-v" && arg != "-l" && arg != "-a"){
+                cout<<"Invalid argument provided, use -h for help"<<endl;
+                return;
+            }
+        }
+        i++;
     }
      
 
