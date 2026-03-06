@@ -4,6 +4,7 @@
 #include <vector>
 
 using std::cin;
+using std::getline;
 using std::cout;
 using std::endl;
 using std::string;
@@ -192,8 +193,7 @@ void check_args(const vector<string> &args){
 
     ScanOptions scan_options;
 
-    string directory_name{args.at(2)};
-    string file_type_option{args.at(1)};
+    
 
     if(check_options(args, scan_options)){
 
@@ -211,12 +211,21 @@ void check_args(const vector<string> &args){
      
 
     if(args.size() <= 7){
+        string directory_name{args.at(2)};
+        string file_type_option{args.at(1)};
        
        FileType chosen_type {check_file_type_option(file_type_option)};
        if(static_cast<int>(chosen_type) == 0){
             return;
        }
-       check_type(directory_name,chosen_type, scan_options);
+       if(args.at(2) == "-"){
+        while(getline(cin, directory_name)){
+            check_type(directory_name, chosen_type, scan_options);
+        }
+        
+       }
+       else
+            check_type(directory_name,chosen_type, scan_options);
         
         }
     
