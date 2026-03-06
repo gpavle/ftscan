@@ -129,9 +129,73 @@ void print_help(){
 
 }
 
+bool check_options(const vector<string> &args, ScanOptions &scan_options){
+     for(int i{0}; const auto &arg : args){
+
+        if(i >= 3){
+            if(arg == "-r"){
+                if(scan_options.recursive == true){
+                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    return false;
+                }
+                scan_options.recursive = true;
+            }
+            if(arg == "-v"){
+                if(scan_options.verbose == true){
+                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    return false;
+                }
+                scan_options.verbose = true;
+            }
+            if(arg == "-l"){
+                if(scan_options.follow_symlinks == true){
+                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    return false;
+                }
+                scan_options.follow_symlinks = true;
+            }
+            if(arg == "-a"){
+                if(scan_options.absolute_paths == true){
+                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    return false;
+                }
+                scan_options.absolute_paths = true;
+            }
+            
+            if(arg != "-r" && arg != "-v" && arg != "-l" && arg != "-a"){
+                cout<<"Invalid argument provided, use -h for help"<<endl;
+                return false;
+            }
+        }
+        i++;
+    } 
+    return true;
+
+}
+
+FileType check_file_type_option(const string &file_type_option){
+
+     if(file_type_option == "-e")
+            return FileType::ELF;
+        
+        else if(file_type_option == "-p")
+            return FileType::PNG;
+
+        else{
+            cout<<"Invalid argument provided, use -h for help"<<endl;
+            return static_cast<FileType>(0);
+        }
+
+}
+
 void check_args(const vector<string> &args){
 
     ScanOptions scan_options;
+
+    string directory_name{args.at(2)};
+    string file_type_option{args.at(1)};
+
+    if(check_options(args, scan_options)){
 
     if(args.size() == 2 && args.at(1) == "-h"){
         print_help();
@@ -142,65 +206,23 @@ void check_args(const vector<string> &args){
         cout<<"Too little arguments provided, use -h for help"<<endl;
         return;}
 
-    for(int i{0}; const auto &arg : args){
-
-        if(i >= 3){
-            if(arg == "-r"){
-                if(scan_options.recursive == true){
-                    cout<<"Invalid argument provieded, use -h for help"<<endl;
-                    return;
-                }
-                scan_options.recursive = true;
-            }
-            if(arg == "-v"){
-                if(scan_options.verbose == true){
-                    cout<<"Invalid argument provided, use -h for help"<<endl;
-                    return;
-                }
-                scan_options.verbose = true;
-            }
-            if(arg == "-l"){
-                if(scan_options.follow_symlinks == true){
-                    cout<<"Invalid argument provided, use -h for help"<<endl;
-                    return;
-                }
-                scan_options.follow_symlinks = true;
-            }
-            if(arg == "-a"){
-                if(scan_options.absolute_paths == true){
-                    cout<<"Invalid argument provided, use -h for help"<<endl;
-                    return;
-                }
-                scan_options.absolute_paths = true;
-            }
-            
-            if(arg != "-r" && arg != "-v" && arg != "-l" && arg != "-a"){
-                cout<<"Invalid argument provided, use -h for help"<<endl;
-                return;
-            }
-        }
-        i++;
-    }
+   
+    
      
 
     if(args.size() <= 7){
-        if(args.at(1) == "-e")
-            check_type(args.at(2), FileType::ELF, scan_options);
-        
-        else if(args.at(1) == "-p")
-            check_type(args.at(2), FileType::PNG, scan_options);
-
-        else{
-            cout<<"Invalid argument provided, use -h for help";
-        }
-
-            
+       
+       FileType chosen_type {check_file_type_option(file_type_option)};
+       if(static_cast<int>(chosen_type) == 0){
+            return;
+       }
+       check_type(directory_name,chosen_type, scan_options);
         
         }
     
     else{
         cout<<"Too many arguments provided, use -h for help"<<endl;
-    }
+    }}
 
 }
 
