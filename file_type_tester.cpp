@@ -21,7 +21,15 @@ using std::ifstream;
 using std::filesystem::filesystem_error;
 using std::vector;
 
-
+enum class FileType : long;
+struct ScanOptions;
+struct FileInfo;
+bool is_valid_file(const path&, const bool&);
+void check_type(const path&, const FileInfo&, const ScanOptions&);
+void print_help();
+bool check_options(const vector<string>&, ScanOptions&);
+FileType check_file_type_option(const string&);
+void check_args(const vector<string>&);
 
 
 struct ScanOptions{
@@ -34,7 +42,7 @@ struct ScanOptions{
 
 };
 
-enum FileType{
+enum class FileType : long{
 
     ELF = 1179403647,
     PNG = 727905341920923785
@@ -48,7 +56,7 @@ struct FileInfo{
 
     FileInfo(const FileType &input_filetype){
         filetype = input_filetype;
-        if(filetype == ELF)
+        if(filetype == FileType::ELF)
             signature_length = 4;
 
     }
@@ -91,7 +99,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
                 long long magic_number {0};
                 ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
-            if(magic_number == fileinfo.filetype){
+            if(magic_number == static_cast<int>(fileinfo.filetype)){
                 if(scan_options.absolute_paths)
                     cout<<canonical(file.path()).generic_string()<<endl;
                 else
