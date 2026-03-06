@@ -76,11 +76,9 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
 
 
     try{
-        directory_iterator it(directory_name);
+        
     
-    
-
-    for(const auto &file : it){
+    for(const auto &file : directory_iterator(directory_name)){
         try{
             if(!is_valid_file(file.path().string(), scan_options.follow_symlinks))
                 continue;
@@ -191,18 +189,13 @@ FileType check_file_type_option(const string &file_type_option){
 
 void check_args(const vector<string> &args){
 
-    ScanOptions scan_options;
-
-    
-
-    if(check_options(args, scan_options)){
 
     if(args.size() == 2 && args.at(1) == "-h"){
         print_help();
         return;
     }
 
-    if(args.size() < 3){
+    else if(args.size() < 3){
         cout<<"Too little arguments provided, use -h for help"<<endl;
         return;}
 
@@ -210,9 +203,12 @@ void check_args(const vector<string> &args){
     
      
 
-    if(args.size() <= 7){
+    else if(args.size() <= 7){
+        ScanOptions scan_options;
+        if(check_options(args, scan_options)){
         string directory_name{args.at(2)};
         string file_type_option{args.at(1)};
+        
        
        FileType chosen_type {check_file_type_option(file_type_option)};
        if(static_cast<int>(chosen_type) == 0){
@@ -227,11 +223,13 @@ void check_args(const vector<string> &args){
        else
             check_type(directory_name,chosen_type, scan_options);
         
-        }
+        }}
     
+
+        
     else{
         cout<<"Too many arguments provided, use -h for help"<<endl;
-    }}
+    }
 
 }
 
