@@ -4,6 +4,7 @@
 #include <vector>
 
 using std::cin;
+using std::cerr;
 using std::getline;
 using std::cout;
 using std::endl;
@@ -80,37 +81,37 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
     
     for(const auto &file : directory_iterator(directory_name)){
         try{
-            if(!is_valid_file(file.path().string(), scan_options.follow_symlinks))
+            if(!is_valid_file(file.path().generic_string(), scan_options.follow_symlinks))
                 continue;
                 
             if(scan_options.recursive && is_directory(file.path()))
                 check_type(file.path(), fileinfo, scan_options);
-            ifstream ifile{file.path().string(), std::ios::binary};
+            ifstream ifile{file.path().generic_string(), std::ios::binary};
             if(ifile.is_open()){
                 long long magic_number {0};
                 ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
             if(magic_number == fileinfo.filetype){
                 if(scan_options.absolute_paths)
-                    cout<<canonical(file.path()).string()<<endl;
+                    cout<<canonical(file.path()).generic_string()<<endl;
                 else
-                    cout<<file.path().string()<<endl;
+                    cout<<file.path().generic_string()<<endl;
             }
 
             ifile.close();
                 
         }
             else if(scan_options.verbose && !is_directory(file.path())){
-                cout<<"Failed to open file: "<<file.path().generic_string()<<endl;
+                cerr<<"Failed to open file: "<<file.path().generic_string()<<endl;
         }}
 
     catch(const filesystem_error &fse){
         if(scan_options.verbose)
-            cout<<fse.what()<<endl;
+            cerr<<fse.what()<<endl;
     }}
 }catch(const filesystem_error &fse){
     if(scan_options.verbose)
-        cout<<fse.what()<<endl;
+        cerr<<fse.what()<<endl;
 }
 }
 
@@ -134,35 +135,35 @@ bool check_options(const vector<string> &args, ScanOptions &scan_options){
         if(i >= 3){
             if(arg == "-r"){
                 if(scan_options.recursive == true){
-                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    cerr<<"Invalid argument provided, use -h for help"<<endl;
                     return false;
                 }
                 scan_options.recursive = true;
             }
             if(arg == "-v"){
                 if(scan_options.verbose == true){
-                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    cerr<<"Invalid argument provided, use -h for help"<<endl;
                     return false;
                 }
                 scan_options.verbose = true;
             }
             if(arg == "-l"){
                 if(scan_options.follow_symlinks == true){
-                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    cerr<<"Invalid argument provided, use -h for help"<<endl;
                     return false;
                 }
                 scan_options.follow_symlinks = true;
             }
             if(arg == "-a"){
                 if(scan_options.absolute_paths == true){
-                    cout<<"Invalid argument provided, use -h for help"<<endl;
+                    cerr<<"Invalid argument provided, use -h for help"<<endl;
                     return false;
                 }
                 scan_options.absolute_paths = true;
             }
             
             if(arg != "-r" && arg != "-v" && arg != "-l" && arg != "-a"){
-                cout<<"Invalid argument provided, use -h for help"<<endl;
+                cerr<<"Invalid argument provided, use -h for help"<<endl;
                 return false;
             }
         }
@@ -181,7 +182,7 @@ FileType check_file_type_option(const string &file_type_option){
             return FileType::PNG;
 
         else{
-            cout<<"Invalid argument provided, use -h for help"<<endl;
+            cerr<<"Invalid argument provided, use -h for help"<<endl;
             return static_cast<FileType>(0);
         }
 
@@ -196,7 +197,7 @@ void check_args(const vector<string> &args){
     }
 
     else if(args.size() < 3){
-        cout<<"Too little arguments provided, use -h for help"<<endl;
+        cerr<<"Too little arguments provided, use -h for help"<<endl;
         return;}
 
    
@@ -228,7 +229,7 @@ void check_args(const vector<string> &args){
 
         
     else{
-        cout<<"Too many arguments provided, use -h for help"<<endl;
+        cerr<<"Too many arguments provided, use -h for help"<<endl;
     }
 
 }
