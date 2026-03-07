@@ -45,7 +45,10 @@ struct ScanOptions{
 enum class FileType : long{
 
     ELF = 1179403647,
-    PNG = 727905341920923785
+    PNG = 727905341920923785,
+    JPG = 16767231,
+    PE = 9460301
+
 
 };
 
@@ -56,8 +59,12 @@ struct FileInfo{
 
     FileInfo(const FileType &input_filetype){
         filetype = input_filetype;
-        if(filetype == FileType::ELF)
+        if(filetype == FileType::ELF || filetype == FileType::PE)
             signature_length = 4;
+        else if(filetype == FileType::JPG)
+            signature_length = 3;
+        else if(filetype == FileType::PNG)
+            signature_length = 8;
 
     }
 
@@ -99,7 +106,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
                 long long magic_number {0};
                 ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
-            if(magic_number == static_cast<int>(fileinfo.filetype)){
+            if(magic_number == static_cast<long>(fileinfo.filetype)){
                 if(scan_options.absolute_paths)
                     cout<<canonical(file.path()).generic_string()<<endl;
                 else
@@ -134,6 +141,7 @@ void print_help(){
     cout<<"Currently supported file types: "<<endl;
     cout<<"ELF(use -e in file type)"<<endl;
     cout<<"PNG(use -p in the file type)"<<endl;
+    cout<<"JPG(use -j in the file type)"<<endl;
 
 }
 
@@ -184,14 +192,23 @@ bool check_options(const vector<string> &args, ScanOptions &scan_options){
 FileType check_file_type_option(const string &file_type_option){
 
      if(file_type_option == "-e")
-            return FileType::ELF;
-        
-        else if(file_type_option == "-p")
-            return FileType::PNG;
+        return FileType::ELF;
 
-        else{
-            cerr<<"Invalid argument provided, use -h for help"<<endl;
-            return static_cast<FileType>(0);
+    else if(file_type_option == "-j")   
+        return FileType::JPG;
+
+        
+    else if(file_type_option == "-p")
+        return FileType::PNG;
+    
+    else if(file_type_option == "-pe"){
+        return FileType::PE;
+    }
+        
+
+    else{
+        cerr<<"Invalid argument provided, use -h for help"<<endl;
+        return static_cast<FileType>(0);
         }
 
 }
@@ -220,7 +237,7 @@ void check_args(const vector<string> &args){
         
        
        FileType chosen_type {check_file_type_option(file_type_option)};
-       if(static_cast<int>(chosen_type) == 0){
+       if(static_cast<long>(chosen_type) == 0){
             return;
        }
        if(args.at(2) == "-"){
