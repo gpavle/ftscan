@@ -17,6 +17,8 @@ using std::filesystem::is_regular_file;
 using std::filesystem::is_symlink;
 using std::filesystem::read_symlink;
 using std::filesystem::symlink_status;
+using std::filesystem::exists;
+using std::filesystem::absolute;
 using std::ifstream;
 using std::filesystem::filesystem_error;
 using std::vector;
@@ -70,10 +72,23 @@ struct FileInfo{
 
 };
 
-bool is_valid_file(const path &file_path, const bool &follow_symlinks){
+bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
-    if(is_symlink(file_path) && follow_symlinks)
-        return is_valid_file(read_symlink(file_path), follow_symlinks);
+    if(!exists(file_path) && is_symlink(file_path) && scan_options.follow_symlinks){
+        if(scan_options.verbose){
+            if(scan_options.absolute_paths)
+                cerr<<"Error: broken symlink:"<<absolute(file_path).lexically_normal()<< " to:"<<read_symlink(file_path)<<" File doesn't exist"<<endl;
+            else{
+                cerr<<"Error: broken symlink:"<<file_path<< " to:"<<read_symlink(file_path)<<" File doesn't exist"<<endl;
+                
+            }
+
+        }
+        return false;
+    }
+
+    if(is_symlink(file_path) && scan_options.follow_symlinks)
+        return is_valid_file(read_symlink(file_path), scan_options);
     
     
 
@@ -96,7 +111,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
     
     for(const auto &file : directory_iterator(directory_name)){
         try{
-            if(!is_valid_file(file.path().generic_string(), scan_options.follow_symlinks))
+            if(!is_valid_file(file.path().generic_string(), scan_options))
                 continue;
                 
             if(scan_options.recursive && is_directory(file.path()))
