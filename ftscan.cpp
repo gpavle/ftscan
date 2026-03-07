@@ -118,7 +118,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
                 check_type(file.path(), fileinfo, scan_options);
             ifstream ifile{file.path().generic_string(), std::ios::binary};
             if(ifile.is_open()){
-                long long magic_number {0};
+                long magic_number {0};
                 ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
             if(magic_number == static_cast<long>(fileinfo.filetype)){
@@ -157,6 +157,7 @@ void print_help(){
     cout<<"ELF(use -e in file type)"<<endl;
     cout<<"PNG(use -p in the file type)"<<endl;
     cout<<"JPG(use -j in the file type)"<<endl;
+    cout<<"PE(use -pe in the file type)"<<endl;
 
 }
 
