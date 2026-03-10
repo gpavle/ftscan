@@ -161,10 +161,9 @@ void print_help(){
 
 }
 
-bool check_options(const vector<string> &args, ScanOptions &scan_options){
-     for(int i{0}; const auto &arg : args){
+bool check_options(const vector<string> &scan_options_args, ScanOptions &scan_options){
+     for(const auto &arg : scan_options_args){
 
-        if(i >= 3){
             if(arg == "-r"){
                 if(scan_options.recursive == true){
                     cerr<<"Invalid argument provided, use -h for help"<<endl;
@@ -198,8 +197,8 @@ bool check_options(const vector<string> &args, ScanOptions &scan_options){
                 cerr<<"Invalid argument provided, use -h for help"<<endl;
                 return false;
             }
-        }
-        i++;
+        
+        
     } 
     return true;
 
@@ -247,7 +246,7 @@ void check_args(const vector<string> &args){
 
     else if(args.size() <= 7){
         ScanOptions scan_options;
-        if(check_options(args, scan_options)){
+        if(check_options(vector<string>{args.begin()+3, args.end()}, scan_options)){
         string directory_name{args.at(2)};
         string file_type_option{args.at(1)};
         
