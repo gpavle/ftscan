@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <vector>
+#include <map>
 
 using std::cin;
 using std::cerr;
@@ -22,6 +23,7 @@ using std::filesystem::absolute;
 using std::ifstream;
 using std::filesystem::filesystem_error;
 using std::vector;
+using std::map;
 
 enum class FileType : long;
 struct ScanOptions;
@@ -55,22 +57,21 @@ enum class FileType : long{
 };
 
 struct FileInfo{
+    private:
+        static const map<FileType, size_t> sig_lengths;
+    public:
+        FileType filetype;
+        size_t signature_length;
+    
 
-    FileType filetype;
-    size_t signature_length;
-
-    FileInfo(const FileType &input_filetype){
-        filetype = input_filetype;
-        if(filetype == FileType::ELF || filetype == FileType::PE)
-            signature_length = 4;
-        else if(filetype == FileType::JPG)
-            signature_length = 3;
-        else if(filetype == FileType::PNG)
-            signature_length = 8;
+        FileInfo(const FileType &input_filetype){
+            filetype = input_filetype;
+            signature_length = sig_lengths.at(filetype);
 
     }
 
 };
+const map<FileType, size_t> FileInfo::sig_lengths {{FileType::ELF, 4},{FileType::PE, 4},{FileType::JPG, 3}, {FileType::PNG, 8}};
 
 bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
