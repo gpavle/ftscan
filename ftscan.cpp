@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <array>
 
 using std::cin;
 using std::cerr;
@@ -24,6 +25,7 @@ using std::ifstream;
 using std::filesystem::filesystem_error;
 using std::vector;
 using std::map;
+using std::array;
 
 enum class FileType : long;
 struct ScanOptions;
@@ -58,20 +60,22 @@ enum class FileType : long{
 
 struct FileInfo{
     private:
-        static const map<FileType, size_t> sig_lengths;
+        static const map<FileType, array<unsigned int, 2>> sig_info;
     public:
         FileType filetype;
-        size_t signature_length;
+        unsigned int signature_length;
+        unsigned int offset;
     
 
         FileInfo(const FileType &input_filetype){
             filetype = input_filetype;
-            signature_length = sig_lengths.at(filetype);
+            signature_length = sig_info.at(filetype).at(0);
+            offset = sig_info.at(filetype).at(1);
 
     }
 
 };
-const map<FileType, size_t> FileInfo::sig_lengths {{FileType::ELF, 4},{FileType::DOS, 2},{FileType::JPG, 3}, {FileType::PNG, 8}};
+const map<FileType, array<unsigned int, 2>> FileInfo::sig_info {{FileType::ELF, {4,0}},{FileType::DOS, {2,0}},{FileType::JPG, {3,0}}, {FileType::PNG, {8,0}}};
 
 bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
@@ -120,6 +124,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
             ifstream ifile{file.path().generic_string(), std::ios::binary};
             if(ifile.is_open()){
                 long magic_number {0};
+                ifile.seekg(fileinfo.offset, std::ios::beg);
                 ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
             if(magic_number == static_cast<long>(fileinfo.filetype)){
