@@ -53,7 +53,6 @@ enum class FileType : long{
     ELF = 1179403647,
     PNG = 727905341920923785,
     JPG = 16767231,
-    DOS = 23117,
     ISO = 211261867075
 
 
@@ -76,7 +75,7 @@ struct FileInfo{
     }
 
 };
-const map<FileType, array<unsigned int, 2>> FileInfo::sig_info {{FileType::ELF, {4,0}},{FileType::DOS, {2,0}},{FileType::JPG, {3,0}}, {FileType::PNG, {8,0}}, {FileType::ISO, {5,32769}}};
+const map<FileType, array<unsigned int, 2>> FileInfo::sig_info {{FileType::ELF, {4,0}},{FileType::JPG, {3,0}}, {FileType::PNG, {8,0}}, {FileType::ISO, {5,32769}}};
 
 bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
@@ -164,7 +163,6 @@ void print_help(){
     cout<<"ELF(use -e in file type)"<<endl;
     cout<<"PNG(use -p in the file type)"<<endl;
     cout<<"JPG(use -j in the file type)"<<endl;
-    cout<<"DOS(use -d in the file type)"<<endl;
     cout<<"ISO(use -i in the file type)"<<endl;
 
 }
@@ -222,9 +220,6 @@ FileType check_file_type_option(const string &file_type_option){
         
     else if(file_type_option == "-p")
         return FileType::PNG;
-    
-    else if(file_type_option == "-d")
-        return FileType::DOS;
     
     else if(file_type_option == "-i")
         return FileType::ISO;
