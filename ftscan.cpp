@@ -115,8 +115,6 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
 
 
     try{
-        
-    
     for(const auto &file : directory_iterator(directory_name)){
         try{
             if(!is_valid_file(file.path().generic_string(), scan_options))
@@ -218,35 +216,15 @@ bool check_options(const vector<string> &scan_options_args, ScanOptions &scan_op
 
 FileType check_file_type_option(const string &file_type_option){
 
-    if(file_type_option == "-e")
-        return FileType::ELF;
+    const map<string, FileType> options_filetypes{{"-e", FileType::ELF},{"-p", FileType::PNG},{"-j", FileType::JPG},{"-i", FileType::ISO,},{"-t", FileType::TAR},{"-x" , FileType::XZ},{"-g" ,FileType::GZ}};
 
-    else if(file_type_option == "-j")   
-        return FileType::JPG;
-        
-    else if(file_type_option == "-p")
-        return FileType::PNG;
-    
-    else if(file_type_option == "-i")
-        return FileType::ISO;
-    
-    else if(file_type_option == "-t")
-        return FileType::TAR;
-
-    else if(file_type_option == "-x")
-        return FileType::XZ;
-    
-    else if(file_type_option == "-g")
-        return FileType::GZ;
-
-    
-        
-
-    else{
+    if(options_filetypes.find(file_type_option) == options_filetypes.end()){
         cerr<<"Invalid argument provided, use -h for help"<<endl;
         return static_cast<FileType>(0);
         }
 
+    return options_filetypes.at(file_type_option);
+    
 }
 
 void check_args(const vector<string> &args){
