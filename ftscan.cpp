@@ -55,7 +55,8 @@ enum class FileType : long{
     JPG = 16767231,
     ISO = 211261867075,
     TAR = 491261293429,
-    XZ = 388031461373
+    XZ = 388031461373,
+    GZ = 35615
 
 
 };
@@ -77,7 +78,7 @@ struct FileInfo{
     }
 
 };
-const map<FileType, array<unsigned int, 2>> FileInfo::sig_info {{FileType::ELF, {4,0}},{FileType::JPG, {3,0}}, {FileType::PNG, {8,0}}, {FileType::ISO, {5,32769}}, {FileType::TAR, {5,257}}, {FileType::XZ, {6,0}}};
+const map<FileType, array<unsigned int, 2>> FileInfo::sig_info {{FileType::ELF, {4,0}},{FileType::JPG, {3,0}}, {FileType::PNG, {8,0}}, {FileType::ISO, {5,32769}}, {FileType::TAR, {5,257}}, {FileType::XZ, {6,0}}, {FileType::GZ, {2,0}}};
 
 bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
@@ -168,6 +169,7 @@ void print_help(){
     cout<<"ISO(use -i in the file type)"<<endl;
     cout<<"TAR(use -t in the file type)"<<endl;
     cout<<"XZ(use -x in the file type)"<<endl;
+    cout<<"GZ(use -g in the file type)"<<endl;
 
 }
 
@@ -216,7 +218,7 @@ bool check_options(const vector<string> &scan_options_args, ScanOptions &scan_op
 
 FileType check_file_type_option(const string &file_type_option){
 
-     if(file_type_option == "-e")
+    if(file_type_option == "-e")
         return FileType::ELF;
 
     else if(file_type_option == "-j")   
@@ -233,6 +235,9 @@ FileType check_file_type_option(const string &file_type_option){
 
     else if(file_type_option == "-x")
         return FileType::XZ;
+    
+    else if(file_type_option == "-g")
+        return FileType::GZ;
 
     
         
