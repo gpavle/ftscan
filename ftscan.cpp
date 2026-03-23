@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <array>
+#include <optional>
 
 using std::cin;
 using std::cerr;
@@ -26,6 +27,7 @@ using std::filesystem::filesystem_error;
 using std::vector;
 using std::map;
 using std::array;
+using std::optional;
 
 enum class FileType : long;
 struct ScanOptions;
@@ -34,7 +36,7 @@ bool is_valid_file(const path&, const bool&);
 void check_type(const path&, const FileInfo&, const ScanOptions&);
 void print_help();
 bool check_options(const vector<string>&, ScanOptions&);
-FileType check_file_type_option(const string&);
+optional<FileType> check_file_type_option(const string&);
 void check_args(const vector<string>&);
 
 
@@ -214,13 +216,13 @@ bool check_options(const vector<string> &scan_options_args, ScanOptions &scan_op
 
 }
 
-FileType check_file_type_option(const string &file_type_option){
+optional<FileType> check_file_type_option(const string &file_type_option){
 
     const map<string, FileType> options_filetypes{{"-e", FileType::ELF},{"-p", FileType::PNG},{"-j", FileType::JPG},{"-i", FileType::ISO,},{"-t", FileType::TAR},{"-x" , FileType::XZ},{"-g" ,FileType::GZ}};
 
     if(options_filetypes.find(file_type_option) == options_filetypes.end()){
         cerr<<"Invalid argument provided, use -h for help"<<endl;
-        return static_cast<FileType>(0);
+        return std::nullopt;
         }
 
     return options_filetypes.at(file_type_option);
@@ -250,18 +252,18 @@ void check_args(const vector<string> &args){
         string file_type_option{args.at(1)};
         
        
-       FileType chosen_type {check_file_type_option(file_type_option)};
-       if(static_cast<long>(chosen_type) == 0){
+       auto chosen_type {check_file_type_option(file_type_option)};
+       if(!chosen_type){
             return;
        }
        if(args.at(2) == "-"){
         while(getline(cin, directory_name)){
-            check_type(directory_name, chosen_type, scan_options);
+            check_type(directory_name, chosen_type.value(), scan_options);
         }
         
        }
        else
-            check_type(directory_name,chosen_type, scan_options);
+            check_type(directory_name,chosen_type.value(), scan_options);
         
         }}
     
