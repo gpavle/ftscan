@@ -5,6 +5,8 @@
 #include <map>
 #include <array>
 #include <optional>
+#include <sstream>
+#include <ranges>
 
 using std::cin;
 using std::cerr;
@@ -28,12 +30,15 @@ using std::vector;
 using std::map;
 using std::array;
 using std::optional;
+using std::stringstream;
+using std::views::enumerate;
 
 enum class FileType : long;
 struct ScanOptions;
+struct ScanContext;
 struct FileInfo;
 bool is_valid_file(const path&, const bool&);
-void check_type(const path&, const FileInfo&, const ScanOptions&);
+void check_type(const path&, const FileInfo&, ScanContext);
 void print_help();
 bool check_options(const vector<string>&, ScanOptions&);
 optional<FileType> check_file_type_option(const string&);
@@ -42,11 +47,21 @@ void check_args(const vector<string>&);
 
 struct ScanOptions{
 
-    bool recursive = false;
+    unsigned int recursion_depth = 0;
     bool verbose = false;
     bool follow_symlinks = false;
     bool absolute_paths = false;
 
+
+};
+
+struct ScanContext{
+    const ScanOptions &rules;
+    unsigned int current_depth;
+
+    ScanContext(const ScanOptions &context_rules): rules{context_rules},current_depth{context_rules.recursion_depth}{}
+    ScanContext(ScanContext ctx, const unsigned int depth): rules{ctx.rules}, current_depth{depth}{}
+    
 
 };
 
@@ -113,17 +128,17 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
 
 
-void check_type(const path &directory_name, const FileInfo &fileinfo, const ScanOptions &scan_options){
+void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContext scan_context){
 
 
     try{
     for(const auto &file : directory_iterator(directory_name)){
         try{
-            if(!is_valid_file(file.path().generic_string(), scan_options))
+            if(!is_valid_file(file.path().generic_string(), scan_context.rules))
                 continue;
                 
-            if(scan_options.recursive && is_directory(file.path()))
-                check_type(file.path(), fileinfo, scan_options);
+            if(scan_context.current_depth > 0 && is_directory(file.path()))
+                check_type(file.path(), fileinfo, ScanContext{scan_context, scan_context.current_depth - 1});
             ifstream ifile{file.path().generic_string(), std::ios::binary};
             if(ifile.is_open()){
                 long magic_number {0};
@@ -131,7 +146,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
                 ifile.read(reinterpret_cast<char*>(&magic_number), fileinfo.signature_length);
 
             if(magic_number == static_cast<long>(fileinfo.filetype)){
-                if(scan_options.absolute_paths)
+                if(scan_context.rules.absolute_paths)
                     cout<<canonical(file.path()).generic_string()<<endl;
                 else
                     cout<<file.path().generic_string()<<endl;
@@ -140,16 +155,16 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, const Scan
             ifile.close();
                 
         }
-            else if(scan_options.verbose && !is_directory(file.path())){
+            else if(scan_context.rules.verbose && !is_directory(file.path())){
                 cerr<<"Failed to open file: "<<file.path().generic_string()<<endl;
         }}
 
     catch(const filesystem_error &fse){
-        if(scan_options.verbose)
+        if(scan_context.rules.verbose)
             cerr<<fse.what()<<endl;
     }}
 }catch(const filesystem_error &fse){
-    if(scan_options.verbose)
+    if(scan_context.rules.verbose)
         cerr<<fse.what()<<endl;
 }
 }
@@ -159,7 +174,7 @@ void print_help(){
     cout<<endl;
     cout<<"Usage: file_type_tester [file type] [directory path] [options]"<<endl;
     cout<<"-v       verbose mode(displays error messages)"<<endl;
-    cout<<"-r       recurive mode(descends into subdirectories)"<<endl;
+    cout<<"-r N     recurive mode(descends into subdirectories N levels(omitting N gives maximum recursion))"<<endl;
     cout<<"-l       follow symlinks"<<endl;
     cout<<"-a       always display absolute paths(will resolve symlinks)"<<endl;
     cout<<"Currently supported file types: "<<endl;
@@ -174,14 +189,18 @@ void print_help(){
 }
 
 bool check_options(const vector<string> &scan_options_args, ScanOptions &scan_options){
-     for(const auto &arg : scan_options_args){
+     for(const auto [index, arg] : enumerate(scan_options_args)){
 
             if(arg == "-r"){
-                if(scan_options.recursive == true){
+                if(scan_options.recursion_depth != 0){
                     cerr<<"Invalid argument provided, use -h for help"<<endl;
-                    return false;
-                }
-                scan_options.recursive = true;
+                    return false;}
+                
+                if(scan_options_args.size() > static_cast<size_t>(index + 1) && stringstream{scan_options_args.at(index+1)} >> scan_options.recursion_depth);
+                        
+                else
+                    scan_options.recursion_depth = 999999999;
+                
             }
             if(arg == "-v"){
                 if(scan_options.verbose == true){
@@ -206,8 +225,9 @@ bool check_options(const vector<string> &scan_options_args, ScanOptions &scan_op
             }
             
             if(arg != "-r" && arg != "-v" && arg != "-l" && arg != "-a"){
-                cerr<<"Invalid argument provided, use -h for help"<<endl;
-                return false;
+                if(!(stringstream{arg} >> scan_options.recursion_depth && scan_options_args.at(index-1) == "-r")){
+                    cerr<<"Invalid argument provided, use -h for help"<<endl;
+                    return false;}
             }
         
         
@@ -245,7 +265,7 @@ void check_args(const vector<string> &args){
     
      
 
-    else if(args.size() <= 7){
+    else if(args.size() <= 8){
         ScanOptions scan_options;
         if(check_options(vector<string>{args.begin()+3, args.end()}, scan_options)){
         string directory_name{args.at(2)};
