@@ -102,9 +102,9 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
     if(!exists(file_path) && is_symlink(file_path) && scan_options.follow_symlinks){
         if(scan_options.verbose){
             if(scan_options.absolute_paths)
-                cerr<<"Error: broken symlink:"<<absolute(file_path).lexically_normal()<< " to:"<<read_symlink(file_path)<<" File doesn't exist"<<endl;
+                cerr<<"Error: broken symlink:"<<absolute(file_path).lexically_normal().generic_string()<< " to:"<<read_symlink(file_path).generic_string()<<" File doesn't exist"<<endl;
             else{
-                cerr<<"Error: broken symlink:"<<file_path<< " to:"<<read_symlink(file_path)<<" File doesn't exist"<<endl;
+                cerr<<"Error: broken symlink:"<<file_path.generic_string()<< " to:"<<read_symlink(file_path).generic_string()<<" File doesn't exist"<<endl;
                 
             }
 
@@ -155,7 +155,11 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContex
                 
         }
             else if(scan_context.rules.verbose && !is_directory(file.path())){
-                cerr<<"Failed to open file: "<<file.path().generic_string()<<endl;
+                if(scan_context.rules.absolute_paths)
+                    cerr<<"Failed to open file: "<<canonical(file.path()).lexically_normal().generic_string()<<endl;
+                else
+                     cerr<<"Failed to open file: "<<file.path().generic_string()<<endl;
+
         }
 
     }
