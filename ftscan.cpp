@@ -133,7 +133,6 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContex
 
     try{
     for(const auto &file : directory_iterator(directory_name)){
-        try{
             if(!is_valid_file(file.path().generic_string(), scan_context.rules))
                 continue;
                 
@@ -157,15 +156,18 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContex
         }
             else if(scan_context.rules.verbose && !is_directory(file.path())){
                 cerr<<"Failed to open file: "<<file.path().generic_string()<<endl;
-        }}
+        }
 
-    catch(const filesystem_error &fse){
-        if(scan_context.rules.verbose)
-            cerr<<fse.what()<<endl;
-    }}
+    }
 }catch(const filesystem_error &fse){
-    if(scan_context.rules.verbose)
-        cerr<<fse.what()<<endl;
+     if(scan_context.rules.verbose){
+            if(scan_context.rules.absolute_paths)
+                cerr<<"Failed to open directory:" <<absolute(fse.path1()).lexically_normal().generic_string()<<": "<<fse.code().message()<<endl;
+            
+            else
+                cerr<<"Failed to open directory:" <<fse.path1().generic_string()<<": "<<fse.code().message()<<endl;
+            }
+   
 }
 }
 
