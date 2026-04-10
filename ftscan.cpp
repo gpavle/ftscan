@@ -7,6 +7,7 @@
 #include <optional>
 #include <sstream>
 #include <ranges>
+#include <set>
 
 using std::cin;
 using std::cerr;
@@ -28,6 +29,7 @@ using std::ifstream;
 using std::filesystem::filesystem_error;
 using std::vector;
 using std::map;
+using std::set;
 using std::array;
 using std::optional;
 using std::stringstream;
@@ -58,9 +60,10 @@ struct ScanOptions{
 struct ScanContext{
     const ScanOptions &rules;
     unsigned int current_depth;
+    static inline set<path> visited_directories;
 
     ScanContext(const ScanOptions &context_rules): rules{context_rules},current_depth{context_rules.recursion_depth}{}
-    ScanContext(ScanContext ctx, const unsigned int depth): rules{ctx.rules}, current_depth{depth}{}
+    ScanContext(const ScanOptions &context_rules,const unsigned int depth): rules{context_rules}, current_depth{depth}{}
     
 
 };
@@ -80,7 +83,7 @@ enum class FileType : long{
 
 struct FileInfo{
     private:
-        static const map<FileType, array<unsigned int, 2>> sig_info;
+        static inline const map<FileType, array<unsigned int, 2>> sig_info {{FileType::ELF, {4,0}},{FileType::JPG, {3,0}}, {FileType::PNG, {8,0}}, {FileType::ISO, {5,32769}}, {FileType::TAR, {5,257}}, {FileType::XZ, {6,0}}, {FileType::GZ, {2,0}}};
     public:
         FileType filetype;
         unsigned int signature_length;
@@ -95,9 +98,16 @@ struct FileInfo{
     }
 
 };
-const map<FileType, array<unsigned int, 2>> FileInfo::sig_info {{FileType::ELF, {4,0}},{FileType::JPG, {3,0}}, {FileType::PNG, {8,0}}, {FileType::ISO, {5,32769}}, {FileType::TAR, {5,257}}, {FileType::XZ, {6,0}}, {FileType::GZ, {2,0}}};
+
 
 bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
+    
+
+    
+    if(is_symlink(file_path) && exists(file_path)){
+        if(ScanContext::visited_directories.contains(canonical(file_path)))
+            return false;
+    }
 
     if(!exists(file_path) && is_symlink(file_path) && scan_options.follow_symlinks){
         if(scan_options.verbose){
@@ -130,6 +140,8 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
 void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContext scan_context){
 
+    if(exists(directory_name))
+        ScanContext::visited_directories.insert(canonical(directory_name));
 
     try{
     for(const auto &file : directory_iterator(directory_name)){
@@ -137,7 +149,7 @@ void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContex
                 continue;
                 
             if(scan_context.current_depth > 0 && is_directory(file.path()))
-                check_type(file.path(), fileinfo, ScanContext{scan_context, scan_context.current_depth - 1});
+                check_type(file.path(), fileinfo, ScanContext{scan_context.rules, scan_context.current_depth - 1});
             ifstream ifile{file.path().generic_string(), std::ios::binary};
             if(ifile.is_open()){
                 long magic_number {0};
