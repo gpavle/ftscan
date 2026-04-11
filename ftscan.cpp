@@ -123,7 +123,7 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
     }
 
     if(is_symlink(file_path) && scan_options.follow_symlinks)
-        return is_valid_file(read_symlink(file_path), scan_options);
+        return is_valid_file(canonical(file_path), scan_options);
     
     
 
