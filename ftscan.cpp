@@ -60,7 +60,7 @@ struct ScanOptions{
 struct ScanContext{
     const ScanOptions &rules;
     unsigned int current_depth;
-    static inline set<path> visited_directories;
+    static inline set<path> visited_files;
 
     ScanContext(const ScanOptions &context_rules): rules{context_rules},current_depth{context_rules.recursion_depth}{}
     ScanContext(const ScanOptions &context_rules,const unsigned int depth): rules{context_rules}, current_depth{depth}{}
@@ -105,7 +105,7 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 
     
     if(is_symlink(file_path) && exists(file_path)){
-        if(ScanContext::visited_directories.contains(canonical(file_path)))
+        if(ScanContext::visited_files.contains(canonical(file_path)))
             return false;
     }
 
@@ -128,8 +128,18 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
     
 
         
-    else if(is_regular_file(symlink_status(file_path)) || is_directory(symlink_status(file_path)))  
-        return true;
+    else if(is_regular_file(symlink_status(file_path)) || is_directory(symlink_status(file_path))){
+
+        if(is_regular_file(symlink_status(file_path)) && scan_options.absolute_paths){
+            if(ScanContext::visited_files.contains(canonical(file_path)))
+                return false;
+            
+            ScanContext::visited_files.insert(canonical(file_path));
+        }
+
+         return true;
+    }
+       
 
     return false;
 
@@ -141,7 +151,7 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContext scan_context){
 
     if(exists(directory_name))
-        ScanContext::visited_directories.insert(canonical(directory_name));
+        ScanContext::visited_files.insert(canonical(directory_name));
 
     try{
     for(const auto &file : directory_iterator(directory_name)){
