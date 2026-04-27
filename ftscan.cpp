@@ -37,7 +37,7 @@ using std::views::enumerate;
 
 enum class FileType : long;
 struct ScanOptions;
-struct ScanContext;
+class ScanContext;
 struct FileInfo;
 bool is_valid_file(const path&, const bool&);
 void check_type(const path&, const FileInfo&, ScanContext);
@@ -57,13 +57,25 @@ struct ScanOptions{
 
 };
 
-struct ScanContext{
-    const ScanOptions &rules;
-    unsigned int current_depth;
-    static inline set<path> visited_files;
+class ScanContext{
+    private:
+        static inline set<path> visited_files;
+    public:
 
-    ScanContext(const ScanOptions &context_rules): rules{context_rules},current_depth{context_rules.recursion_depth}{}
-    ScanContext(const ScanOptions &context_rules,const unsigned int depth): rules{context_rules}, current_depth{depth}{}
+    
+        const ScanOptions &rules;
+        unsigned int current_depth;
+    
+        ScanContext(const ScanOptions &context_rules): rules{context_rules},current_depth{context_rules.recursion_depth}{}
+        ScanContext(const ScanOptions &context_rules,const unsigned int depth): rules{context_rules}, current_depth{depth}{}
+
+        void insert_path(const path &visited_file){
+            visited_files.insert(visited_file);
+        }
+
+        bool is_path_visited(const path &current_file) const{
+            return visited_files.contains(current_file);
+        }
     
 
 };
@@ -100,18 +112,18 @@ struct FileInfo{
 };
 
 
-bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
+bool is_valid_file(const path &file_path, ScanContext &scan_context){
     
 
     
     if(is_symlink(file_path) && exists(file_path)){
-        if(ScanContext::visited_files.contains(canonical(file_path)))
+        if(scan_context.is_path_visited(canonical(file_path)))
             return false;
     }
 
-    if(!exists(file_path) && is_symlink(file_path) && scan_options.follow_symlinks){
-        if(scan_options.verbose){
-            if(scan_options.absolute_paths)
+    if(!exists(file_path) && is_symlink(file_path) && scan_context.rules.follow_symlinks){
+        if(scan_context.rules.verbose){
+            if(scan_context.rules.absolute_paths)
                 cerr<<"Error: broken symlink:"<<absolute(file_path).lexically_normal().generic_string()<< " to:"<<read_symlink(file_path).generic_string()<<" File doesn't exist"<<endl;
             else{
                 cerr<<"Error: broken symlink:"<<file_path.generic_string()<< " to:"<<read_symlink(file_path).generic_string()<<" File doesn't exist"<<endl;
@@ -122,19 +134,19 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
         return false;
     }
 
-    if(is_symlink(file_path) && scan_options.follow_symlinks)
-        return is_valid_file(canonical(file_path), scan_options);
+    if(is_symlink(file_path) && scan_context.rules.follow_symlinks)
+        return is_valid_file(canonical(file_path), scan_context);
     
     
 
         
     else if(is_regular_file(symlink_status(file_path)) || is_directory(symlink_status(file_path))){
 
-        if(is_regular_file(symlink_status(file_path)) && scan_options.absolute_paths){
-            if(ScanContext::visited_files.contains(canonical(file_path)))
+        if(is_regular_file(symlink_status(file_path)) && scan_context.rules.absolute_paths){
+            if(scan_context.is_path_visited(canonical(file_path)))
                 return false;
             
-            ScanContext::visited_files.insert(canonical(file_path));
+            scan_context.insert_path(canonical(file_path));
         }
 
          return true;
@@ -151,11 +163,11 @@ bool is_valid_file(const path &file_path, const ScanOptions &scan_options){
 void check_type(const path &directory_name, const FileInfo &fileinfo, ScanContext scan_context){
 
     if(exists(directory_name))
-        ScanContext::visited_files.insert(canonical(directory_name));
+        scan_context.insert_path(canonical(directory_name));
 
     try{
     for(const auto &file : directory_iterator(directory_name)){
-            if(!is_valid_file(file.path().generic_string(), scan_context.rules))
+            if(!is_valid_file(file.path().generic_string(), scan_context))
                 continue;
                 
             if(scan_context.current_depth > 0 && is_directory(file.path()))
